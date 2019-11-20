@@ -10,8 +10,10 @@ class Agent:
         self._boredom = 3
         self._state = (0,0) #tuple (action,feedback)
         self._action_memory = [None] * self._boredom
-        self._current_action = None
+        self._current_action = 0
         self._bored = False
+        self._predilection_mem = [None] * (env.N_ACTIONS)
+        print('action'.ljust(8) + 'anticipated'.ljust(13) + 'real'.ljust(6) + 'anticipation'.ljust(14) + 'predilection'.ljust(14) + 'excitation'.ljust(12))
 
 
     def live(self):
@@ -23,6 +25,10 @@ class Agent:
         self._state = (self._current_action, env.FEEDBACKS[self._current_action])
         self.update_boredom()
 
+        a = self._current_action + 1
+        an = self._predictions[self._current_action]
+        r = env.FEEDBACKS[self._current_action]
+
         #anticipation
         if self._predictions[self._current_action] != env.FEEDBACKS[self._current_action]:
             anticipation = False
@@ -31,23 +37,28 @@ class Agent:
         #predilection
         if env.FEEDBACK_MATRIX[self._current_action]<0:
             predilection = False
+            self._predilection_mem[self._current_action] = False
+        else:
+            self._predilection_mem[self._current_action] = True
 
         #excitation
         if self._bored:
             excitation = False
 
-        print("state : "        +str(self._state), end=" | ")
-        print("anticipation : " +str(anticipation), end=" | ")
-        print("predilection : " +str(predilection), end=" | ")
-        print("excitation : "   +str(excitation))
+        ane = ':-)' if anticipation else ':-('
+        pe = ':-)' if predilection else ':-('
+        e = ':-)' if excitation else ':-('
+
+        print(str(a).ljust(8) + str(an).ljust(13) + str(r).ljust(6) + ane.ljust(14) + pe.ljust(14) + e.ljust(12))
 
 
     def get_next_action(self):
         if self._bored:
-            self._current_action = random.choice(list(range(0, self._current_action))+ list(range(self._current_action+1, env.N_ACTIONS)))
+            ca = self._current_action
+            self._current_action = random.choice(list(range(0, ca))+ list(range(ca + 1, env.N_ACTIONS)))
+            while self._predilection_mem[self._current_action] == False:
+                self._current_action = random.choice(list(range(0, ca))+ list(range(ca + 1, env.N_ACTIONS)))
             self._bored = False
-        else:
-            self._current_action = random.choice(range(env.N_ACTIONS))
 
         return self._current_action
 
